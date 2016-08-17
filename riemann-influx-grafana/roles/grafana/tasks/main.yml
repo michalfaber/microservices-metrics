@@ -1,0 +1,52 @@
+---
+- name: Downloading/starting Grafana ...
+  docker:
+    name: grafana
+    image: grafana/grafana:3.0.4
+    expose:
+      - 3000
+    ports:
+      - 8123:3000
+
+- pause: seconds=10
+
+- name: Add grafana datasources
+  uri:
+    url: "http://{{ inventory_hostname }}:8123/api/datasources"
+    return_content: yes
+    method: POST
+    body: {
+            "name": "influx",
+            "type": "influxdb",
+            "url": "http://{{ inventory_hostname }}:8086",
+            "access": "direct",
+            "basicAuth": false,
+            "user": "root",
+            "password": "root",
+            "database": "db"
+          }
+    user: "admin"
+    password: "admin"
+    force_basic_auth: yes
+    HEADER_Content-Type: "application/json"
+    status_code: 200
+    body_format: json
+    run_once: true
+
+- name: Add grafana dashboards
+  uri:
+    url: "http://{{ inventory_hostname }}:8123/api/dashboards/db"
+    method: POST
+    user: "admin"
+    password: "admin"
+    force_basic_auth: yes
+    body: "{{ lookup('file', item) | from_json }}"
+    HEADER_Content-Type: "application/json"
+    body_format: json
+    status_code: 200
+  run_once: true
+  with_fileglob:
+    - "dashboards/*json"
+
+
+

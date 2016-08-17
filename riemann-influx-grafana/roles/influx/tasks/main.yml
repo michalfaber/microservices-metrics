@@ -1,0 +1,22 @@
+---
+- name: Downloading/starting Influxdb ...
+  docker:
+    name: influxdb
+    image: tutum/influxdb:0.13
+    expose:
+      - 8083
+      - 8086
+      - 8090
+      - 8099
+      - 4444
+    ports:
+      - 8083:8083
+      - 8086:8086
+      - 4444:4444/udp
+    env:
+      PRE_CREATE_DB: "db"
+      ADMIN_USER: root
+      INFLUXDB_INIT_PWD: root
+      UDP_DB: "db"
+
+

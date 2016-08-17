@@ -1,0 +1,25 @@
+---
+- name: Downloading/starting Riemann ...
+  docker:
+    name: riemann
+    image: mnuessler/riemann
+    expose:
+      - 5555
+      - 5555/udp
+      - 5556
+      - 5557
+    ports:
+      - 5555:5555
+      - "5555:5555/udp"
+      - 5556:5556
+      - 5557:5557
+    volumes:
+      - '{{ riemann_config_dir }}:/etc/riemann'
+
+
+
+
+
+
+
+
