@@ -1,8 +1,10 @@
+# microservices-metrics
+
 This is an example of instrumentation microservices to measure all latencies during end to end processing of an event. It requires Riemann, Influxdb and Grafana.  
 
-* Riemann – tool for monitoring distributed systems, aggregates events from systems, process them and send further.
-* Influxdb – storage for time-series data.
-* Grafana – metrics & analytics dashboards.
+* __Riemann__ – tool for monitoring distributed systems, aggregates events from systems, process them and send further.
+* __Influxdb__ – storage for time-series data.
+* __Grafana__ – metrics & analytics dashboards.
 
 Here is a hypothetical flow for which we want to measure all sub-latencies.
 
@@ -13,7 +15,7 @@ Service A pulls message from an external/legacy system (RabbitMQ), performs prep
 
 ### How metrics are collected
 
-After a new message arrives, Service A generates correlation id and submits tracing event to Riemann (begin of a segment). This correlation id has to be attached to a message before sending further to Kafka.
+After a new message arrives, _Service A_ generates correlation id and submits tracing event to Riemann (begin of a segment). This correlation id has to be attached to a message before sending further to Kafka.
 
 ```scala
 service(“segment1”) |
@@ -21,7 +23,7 @@ service(“segment1”) |
       attributes(("correlation_id", correlationId)) |
       ttl(60) |>> metricsDestination
 ```
-After receiving a message from Kafka, service B submits tracing event to Riemann (end of a segment). correlationId travels with a message and is used to pair both ends of a segment.
+After receiving a message from Kafka, _Service B_ submits tracing event to Riemann (end of a segment). correlationId travels with a message and is used to pair both ends of a segment.
 
 ```scala
 service(“segment1”) |
@@ -59,3 +61,47 @@ Here is the result of running latency-simulator for 4 minutes.  For the purpose 
 
 ![alt text](https://github.com/michalfaber/microservices-metrics/raw/images/pic2.png "Grafana simulation dashboard")
 
+
+### How to run simulation
+
+#### __Prerequisites__
+
+[docker](https://docs.docker.com/engine/installation/)
+
+[docker.py](https://github.com/docker/docker-py)
+
+[ansible](http://docs.ansible.com/ansible/intro_installation.html#)
+
+#### __Setup OSX (docker-machine)__
+
+1) Clone repo
+
+2) Download and run docker images riemann, influxdb and grafana 
+```
+cd riemann-influx-grafana
+ansible-playbook -i 192.168.99.100, setup.yml --connection=local -e riemann_config_dir=[full path]/microservices-metrics/riemann-config
+```
+
+NOTE:
+_riemann_config_dir_ parameter must be a FULL path.
+
+
+3) Open dashboard url http://192.168.99.100:8123/dashboard/db/simulation
+
+4) Run simulation
+```
+cd ../latency-simulator
+sbt run
+```
+
+5) Simulation will take 4 minutes. Refresh the dashboard.
+
+#### __Setup Linux__
+
+All steps are the same except references to a host where servers are deployed. On OSX, docker is run within virtualbox so the host is 192.168.99.100 On Linux, host may be directly 127.0.0.1 
+
+Uncomment host section for Linux in: 
+```
+latency-simulator/src/main/resources/application.conf
+riemann-config/riemann.config
+```
